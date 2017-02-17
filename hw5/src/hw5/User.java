@@ -1,10 +1,5 @@
 package hw5;
 
-import java.awt.Graphics2D;
-import java.awt.geom.Line2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
 
 public class User {
 	private String userName;

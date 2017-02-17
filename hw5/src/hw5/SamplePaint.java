@@ -7,11 +7,12 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.util.ArrayList;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,14 +26,16 @@ import javax.swing.JRadioButton;
 
 public class SamplePaint extends JFrame {
 
-	private JButton buttonLine	, buttonCyrcle, buttonRectangle, buttonExit;
+	private float zoom = 1;
+
+	private JButton buttonLine, buttonCyrcle, buttonRectangle, buttonExit;
 
 	private JRadioButton rdbtnGreen, rdbtnBlue, rdbtnRed, rdbtnBlack;
 
-	private Graphics2D g2d;
+	private Graphics2D g2d, g2d1;
 	private ButtonGroup buttonGroup, radioBttpnGroup;
 
-	private Map<Point[], Color> lineMap,rectangleMap,cyrcleMap;
+	private Map<Point[], Color> lineMap, rectangleMap, cyrcleMap;
 
 	private Point p1, p2;
 
@@ -51,12 +54,14 @@ public class SamplePaint extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+
 					User user = new User();
 					user.setId(0);
 					user.setPass("123");
 					user.setUserName("guest");
 					SamplePaint samplePaint = new SamplePaint(user);
 					samplePaint.setVisible(true);
+					// samplePaint.setResizable(false);
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -65,13 +70,12 @@ public class SamplePaint extends JFrame {
 		});
 	}
 
-
 	/**
 	 * Create the frame.
 	 */
-	
+
 	public SamplePaint(User user) {
-		super("sample paint" + " " + user.getUserName());
+		super("sample paint" + " : " + user.getUserName());
 
 		this.user = new User();
 		this.user.setId(user.getId());
@@ -141,6 +145,29 @@ public class SamplePaint extends JFrame {
 			}
 		});
 
+		addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+
+				if (e.getPreciseWheelRotation() < 0) {
+					zoom -= 0.1;
+				} else {
+					zoom += 0.1;
+				}
+
+//				if (zoom < 0.01) {
+//					zoom = 0.01f;
+//				}
+
+				DecimalFormat df = new DecimalFormat("0.#");
+
+				zoom = Float.parseFloat(df.format(zoom));
+
+				repaint();
+
+			}
+		});
+
 		addMouseListener(new MouseListener() {
 
 			@Override
@@ -161,35 +188,35 @@ public class SamplePaint extends JFrame {
 
 				case "cyrcle":
 					cyrcleMap.put(points, color);
-				
+
 					break;
 				case "rectangle":
 					rectangleMap.put(points, color);
-					
+
 					break;
 				default:
 					lineMap.put(points, color);
-					
+
 					break;
 				}
-				
+
 				repaint();
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
+
 				p1 = new Point(e.getPoint());
+
 			}
 
 			@Override
 			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
 
 			}
 
@@ -201,6 +228,7 @@ public class SamplePaint extends JFrame {
 	}
 
 	private void initUI() {
+
 		shapeManager = new ShapeManager(user);
 
 		shape = new Shape();
@@ -219,12 +247,11 @@ public class SamplePaint extends JFrame {
 		cyrcleMap = shapeManager.getShape("cyrcle");
 		rectangleMap = shapeManager.getShape("rectangle");
 
-		setBounds(100, 100, 650, 550);
+		setBounds(100, 100, 630, 550);
 		contentPane = new JPanel();
 
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setBounds(100, 100, 500, 500);
-		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
 		buttonLine = new JButton("خط");
@@ -244,19 +271,19 @@ public class SamplePaint extends JFrame {
 		contentPane.add(label);
 
 		rdbtnBlack = new JRadioButton("مشکی");
-		rdbtnBlack.setBounds(540, 140, 109, 23);
+		rdbtnBlack.setBounds(540, 140, 70, 23);
 		contentPane.add(rdbtnBlack);
 
 		rdbtnRed = new JRadioButton("قرمز");
-		rdbtnRed.setBounds(540, 170, 109, 23);
+		rdbtnRed.setBounds(540, 170, 70, 23);
 		contentPane.add(rdbtnRed);
 
 		rdbtnGreen = new JRadioButton("سبز");
-		rdbtnGreen.setBounds(540, 200, 109, 23);
+		rdbtnGreen.setBounds(540, 200, 70, 23);
 		contentPane.add(rdbtnGreen);
 
 		rdbtnBlue = new JRadioButton("آبی");
-		rdbtnBlue.setBounds(540, 230, 109, 23);
+		rdbtnBlue.setBounds(540, 230, 70, 23);
 		contentPane.add(rdbtnBlue);
 
 		radioBttpnGroup = new ButtonGroup();
@@ -274,41 +301,79 @@ public class SamplePaint extends JFrame {
 		buttonExit.setBounds(520, 270, 89, 23);
 		contentPane.add(buttonExit);
 
+		// contentPane.add(new OptionsPanel(),BorderLayout.EAST);;
+		setContentPane(contentPane);
 	}
 
 	public void paint(Graphics g) {
 		super.paint(g);
 
 		g2d = (Graphics2D) g;
+		g2d1 = (Graphics2D) contentPane.getGraphics();
+		double width = getWidth();
+		double height = getHeight();
 
-		// cyrcle
+		double zoomWidth = width * zoom;
+		double zoomHeight = height * zoom;
 
-		drawAllCyrcles();
+		double anchorx = (width - zoomWidth) / 2;
+		double anchory = (height - zoomHeight) / 2;
 
-		// Rectangle ;
-		drewAllRectangles();
+		AffineTransform at = new AffineTransform();
+		at.translate(anchorx, anchory);
+		at.scale(zoom, zoom);
 
-		// Linee
-		drawAllLines();
+//		 at.translate(-100, -100);
+
+		g2d.setTransform(at);
+
+//		if (zoom < 1) {
+			// g2d1 = (Graphics2D) g.create();
+
+//			g2d.rotate(360);
+
+			drawShape(g2d);
+
+//		} else if (zoom > 1) {
+//			drawShape(g2d);
+//
+//		} else {
+//			drawShape(g2d);
+//
+//		}
+
 	}
 
-	private void drawAllCyrcles() {
+	private void drawShape(Graphics2D graphicss2d) {
+
+		// cyrcle
+		drawAllCyrcles(graphicss2d);
+
+		// Rectangle ;
+		drewAllRectangles(graphicss2d);
+
+		// Linee
+		drawAllLines(graphicss2d);
+
+	}
+
+	private void drawAllCyrcles(Graphics2D graphicss2d) {
 
 		for (Point[] points : cyrcleMap.keySet()) {
-			g2d.setColor(cyrcleMap.get(points));
+			graphicss2d.setColor(cyrcleMap.get(points));
 			if (points[1].getX() > points[0].getX()) {
 				if (points[1].getY() > points[0].getY()) {
 
 					int width = (int) (points[1].getX() - points[0].getX()) * 2;
 					int height = (int) (points[1].getY() - points[0].getY()) * 2;
 
-					g2d.drawOval((int) (points[0].getX()),
+					graphicss2d.drawOval((int) (points[0].getX()),
 							(int) (points[0].getY()), width, height);
 				} else if (points[1].getY() < points[0].getY()) {
 					int width = (int) (points[1].getX() - points[0].getX());
 					int height = (int) (points[0].getY() - points[1].getY());
 
-					g2d.drawOval((int) (points[0].getX()),
+					graphicss2d.drawOval((int) (points[0].getX()),
 							(int) (points[1].getY() - height), width * 2,
 							height * 2);
 
@@ -319,7 +384,7 @@ public class SamplePaint extends JFrame {
 					int width = (int) (points[0].getX() - points[1].getX());
 					int height = (int) (points[1].getY() - points[0].getY());
 
-					g2d.drawOval((int) (points[1].getX() - width),
+					graphicss2d.drawOval((int) (points[1].getX() - width),
 							(int) (points[0].getY()), width * 2, height * 2);
 
 				}
@@ -327,7 +392,7 @@ public class SamplePaint extends JFrame {
 					int width = (int) (points[0].getX() - points[1].getX());
 					int height = (int) (points[0].getY() - points[1].getY());
 
-					g2d.drawOval((int) (points[1].getX() - (width)),
+					graphicss2d.drawOval((int) (points[1].getX() - (width)),
 							(int) (points[1].getY() - (height)), width * 2,
 							height * 2);
 
@@ -337,13 +402,15 @@ public class SamplePaint extends JFrame {
 					int width = (int) (points[1].getY() - points[0].getY());
 					int height = width;
 
-					g2d.drawOval((int) (points[0].getX() - (width) / 2),
+					graphicss2d.drawOval(
+							(int) (points[0].getX() - (width) / 2),
 							(int) (points[0].getY()), width, height);
 				} else if (points[1].getY() < points[0].getY()) {
 					int width = (int) (points[1].getY() - points[0].getY());
 					int height = width;
 
-					g2d.drawOval((int) (points[0].getX() - (width) / 2),
+					graphicss2d.drawOval(
+							(int) (points[0].getX() - (width) / 2),
 							(int) (points[1].getY() - (height) / 2), width,
 							height);
 				}
@@ -352,7 +419,7 @@ public class SamplePaint extends JFrame {
 					int width = (int) (points[1].getX() - points[0].getX());
 					int height = width;
 
-					g2d.drawOval((int) (points[0].getX()),
+					graphicss2d.drawOval((int) (points[0].getX()),
 							(int) (points[0].getY() - (height) / 2), width,
 							height);
 
@@ -360,7 +427,8 @@ public class SamplePaint extends JFrame {
 					int width = (int) (points[0].getX() - points[0].getX());
 					int height = width;
 
-					g2d.drawOval((int) (points[1].getX() - (width) / 2),
+					graphicss2d.drawOval(
+							(int) (points[1].getX() - (width) / 2),
 							(int) (points[1].getY() - (height) / 2), width,
 							height);
 
@@ -371,41 +439,42 @@ public class SamplePaint extends JFrame {
 
 	}
 
-	private void drawAllLines() {
+	private void drawAllLines(Graphics2D graphicss2d) {
 
 		for (Point[] points : lineMap.keySet()) {
 
-			g2d.setColor(lineMap.get(points));
-
-			g2d.drawLine((int) points[0].getX(), (int) points[0].getY(),
-					(int) points[1].getX(), (int) points[1].getY());
+			graphicss2d.setColor(lineMap.get(points));
+			// graphicss2d.setColor(Color.red);
+			graphicss2d.drawLine((int) points[0].getX(),
+					(int) points[0].getY(), (int) points[1].getX(),
+					(int) points[1].getY());
 		}
 	}
 
-	private void drewAllRectangles() {
+	private void drewAllRectangles(Graphics2D graphicss2d) {
 		for (Point[] points : rectangleMap.keySet()) {
-			g2d.setColor(rectangleMap.get(points));
+			graphicss2d.setColor(rectangleMap.get(points));
 			if (points[1].getX() > points[0].getX()) {
 				if (points[1].getY() > points[0].getY()) {
-					g2d.drawRect((int) points[0].getX(),
+					graphicss2d.drawRect((int) points[0].getX(),
 							(int) points[0].getY(),
 							(int) (points[1].getX() - points[0].getX()),
 							(int) (+points[1].getY() - points[0].getY()));
 				} else if (points[1].getY() < points[0].getY()) {
-					g2d.drawRect((int) points[0].getX(),
+					graphicss2d.drawRect((int) points[0].getX(),
 							(int) points[1].getY(),
 							(int) (points[1].getX() - points[0].getX()),
 							(int) (-points[1].getY() + points[0].getY()));
 				}
 			} else if (points[1].getX() < points[0].getX()) {
 				if (points[1].getY() > points[0].getY()) {
-					g2d.drawRect((int) points[1].getX(),
+					graphicss2d.drawRect((int) points[1].getX(),
 							(int) points[0].getY(),
 							(int) (points[0].getX() - points[1].getX()),
 							(int) (points[1].getY() - points[0].getY()));
 
 				} else if (points[1].getY() < points[0].getY()) {
-					g2d.drawRect((int) points[1].getX(),
+					graphicss2d.drawRect((int) points[1].getX(),
 							(int) points[1].getY(),
 							(int) (points[0].getX() - points[1].getX()),
 							(int) (points[0].getY() - points[1].getY()));

@@ -27,14 +27,13 @@ public class SignUp extends JFrame {
 				try {
 					SignUp frame = new SignUp();
 					frame.setVisible(true);
+					frame.setResizable(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
 	}
-
-	
 
 	public SignUp() {
 
@@ -61,8 +60,9 @@ public class SignUp extends JFrame {
 							user.setPass(pass);
 							UserManager.addUser(user);
 
-							new Login().setVisible(true);
-							;
+							Login login = new Login();
+							login.setVisible(true);
+							login.setResizable(false);
 
 							setVisible(false);
 

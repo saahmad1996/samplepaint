@@ -27,7 +27,9 @@ public class Login extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					new Login().setVisible(true);
+					Login login = new Login();
+					login.setVisible(true);
+					login.setResizable(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -62,8 +64,9 @@ public class Login extends JFrame {
 								user.setId(UserManager.getUserId(userName
 										.getText()));
 
-								new SamplePaint(user).setVisible(true);
-
+								SamplePaint samplePaint = new SamplePaint(user);
+								samplePaint.setVisible(true);
+								samplePaint.setResizable(false);
 								setVisible(false);
 							} else {
 								JOptionPane.showMessageDialog(null,

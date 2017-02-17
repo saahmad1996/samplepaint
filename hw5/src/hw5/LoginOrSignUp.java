@@ -1,6 +1,5 @@
 package hw5;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,6 +22,7 @@ public class LoginOrSignUp extends JFrame {
 				try {
 					LoginOrSignUp frame = new LoginOrSignUp();
 					frame.setVisible(true);
+					frame.setResizable(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -49,7 +49,9 @@ public class LoginOrSignUp extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new Login().setVisible(true);;
+				Login login = new Login();
+				login.setVisible(true);
+				login.setResizable(false);
 				setVisible(false);
 			}
 		});
@@ -64,7 +66,9 @@ public class LoginOrSignUp extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new SignUp().setVisible(true);;
+				SignUp  signUp = new SignUp();
+				signUp.setVisible(true);
+				signUp.setResizable(false);
 				setVisible(false);
 			}
 		});
